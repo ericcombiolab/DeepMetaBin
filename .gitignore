@@ -1,0 +1,12 @@
+data
+venv
+log.txt
+*.log
+gmmvae_tool
+gmvae_latent*
+*.pyc
+vamb_latent*
+README.md
+nohup.out
+test.py
+initial_space*
