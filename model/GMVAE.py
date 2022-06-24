@@ -384,7 +384,7 @@ class GMVAE:
 
       
 
-def calculate_recall(predicts, ground_truth):
+  def calculate_recall(self, predicts, ground_truth):
     predicts_dict = {}
     for clusterNo, contig in predicts:
         predicts_dict[contig] = clusterNo

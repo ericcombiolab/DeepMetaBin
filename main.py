@@ -111,8 +111,8 @@ if args.cuda == 0:
   train_dataset = torch.load(args.train_set, map_location ='cpu')
   test_dataset = torch.load(args.test_set, map_location ='cpu')
 else:
-  train_dataset = torch.load("data/sharon/test_set.pkl", map_location='cuda')
-  test_dataset = torch.load("data/sharon/test_set.pkl", map_location='cuda')
+  train_dataset = torch.load(args.train_set, map_location='cuda')
+  test_dataset = torch.load(args.train_set, map_location='cuda')
 
 
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
