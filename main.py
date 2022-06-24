@@ -23,15 +23,11 @@ import _pickle as pickle
 #########################################################
 ## Input Parameters
 #########################################################
-parser = argparse.ArgumentParser(description='PyTorch Implementation of DGM Clustering')
-
-## Used only in notebooks
-parser.add_argument('-f', '--file',
-                    help='Path for input file. First line should contain number of lines to search in')
+parser = argparse.ArgumentParser(description='PyTorch Implementation of DeepMetaBin Clustering')
 
 ## Dataset
-parser.add_argument('--dataset', type=str, choices=['mnist'],
-                    default='mnist', help='dataset (default: mnist)')
+parser.add_argument('--train_set', type=str, default='data/sharon/training_set.pkl', help='training set (.pkl)')
+parser.add_argument('--test_set', type=str, default='data/sharon/test_set.pkl', help='test set (.pkl) (they are the same without the assembly graph)')
 parser.add_argument('--seed', type=int, default=0, help='random seed (default: 0)')
 
 ## GPU
@@ -62,9 +58,6 @@ parser.add_argument('--gaussian_size', default=32, type=int,
 parser.add_argument('--input_size', default=104, type=int,
                     help='input size (default: 784)')
 
-## Partition parameters
-parser.add_argument('--train_proportion', default=1.0, type=float,
-                    help='proportion of examples to consider for training only (default: 1.0)')
 
 ## Gumbel parameters
 parser.add_argument('--init_temp', default=0.6, type=float,
@@ -114,89 +107,31 @@ if args.cuda:
 #########################################################
 ## Read Data
 #########################################################
-# if args.dataset == "mnist":
-#   print("Loading mnist dataset...")
-#   # Download or load downloaded MNIST dataset
-#   train_dataset = datasets.MNIST('./mnist', train=True, download=True, transform=transforms.ToTensor())
-#   test_dataset = datasets.MNIST('./mnist', train=False, transform=transforms.ToTensor())
-# train_dataset = []
-# with open("data/hlj/training_set.pkl", "rb") as f:
-#   train_dataset = pickle.load(f)
-# train_dataset = torch.load("data/sharon/training_set.pkl", map_location='cpu')
-# test_dataset = torch.load("data/sharon/test_set.pkl", map_location='cpu')
 if args.cuda == 0:
-  train_dataset = torch.load("data/sharon/training_set.pkl", map_location ='cpu')
-  test_dataset = torch.load("data/sharon/test_set.pkl", map_location ='cpu')
+  train_dataset = torch.load(args.train_set, map_location ='cpu')
+  test_dataset = torch.load(args.test_set, map_location ='cpu')
 else:
   train_dataset = torch.load("data/sharon/test_set.pkl", map_location='cuda')
   test_dataset = torch.load("data/sharon/test_set.pkl", map_location='cuda')
-# test_dataset = []
-# with open("data/hlj/test_set.pkl", "rb") as f:
-#   test_dataset = pickle.load(f)
 
-#########################################################
-## Data Partition
-#########################################################
-def partition_dataset(n, proportion=0.8):
-  train_num = int(n * proportion)
-  indices = np.random.permutation(n)
-  train_indices, val_indices = indices[:train_num], indices[train_num:]
-  return train_indices, val_indices
 
-if args.train_proportion == 1.0:
-  train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
-  test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size_val, shuffle=False)
-  # val_loader = test_loader
-  val_loader = test_loader
-else:
-  train_indices, val_indices = partition_dataset(len(train_dataset), args.train_proportion)
-  # Create data loaders for train, validation and test datasets
-  train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, sampler=SubsetRandomSampler(train_indices))
-  val_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size_val, sampler=SubsetRandomSampler(val_indices))
-  test_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size_val, shuffle=False)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size_val, shuffle=False)
+val_loader = test_loader
 
-## Calculate flatten size of each input data
-# args.input_size = np.prod(train_dataset[0][0].size())
-# args.input_size = train_dataset[0][0].size()[0]
-# print(args.input_size)
+
 #########################################################
 ## Train and Test Model
 #########################################################
 gmvae = GMVAE(args)
 
-## Pre-training Phase
-# gmvae.pre_train(train_loader)
-
 ## Training Phase
 history_loss = gmvae.train(train_loader, val_loader, test_loader)
 
-# Iterative Training Phase
-# gmvae.iterative_train(train_loader, val_loader, test_loader, epochs = 79)
 
 # Testing Phase
 precision, recall, f1_score, ari = gmvae.test(test_loader, output_result = True)
 
 print("Valid - Precision: {:.5f}; Recall: {:.5f}; F1_score: {:.5f}; ARI: {:.5f}".format(precision, recall, f1_score, ari))
 
-# Kmeans fit Phase
-# precision, recall, f1_score, ari = gmvae.k_means(test_loader)
-
-# print("Kmeans - Precision: {:.5f}; Recall: {:.5f}; F1_score: {:.5f}; ARI: {:.5f}".format(precision, recall, f1_score, ari))
-
-# GMM fit Phase
-# precision, recall, f1_score, ari = gmvae.fit_gmm(test_loader)
-
-# print("GMM - Precision: {:.5f}; Recall: {:.5f}; F1_score: {:.5f}; ARI: {:.5f}".format(precision, recall, f1_score, ari))
-
-# Generate the latents
-# latents, contignames = gmvae.generate_latent(test_loader)
-# np.save('data/latents', latents)
-# with open("data/contignames.pkl", "wb") as f:
-#   pickle.dump(contignames, f)
-
-# plot latent space
-# gmvae.plot_latent_space(test_loader, True)
-
-# print("Testing phase...")
-# print("Accuracy: %.5lf, NMI: %.5lf" % (accuracy, nmi) )
 
