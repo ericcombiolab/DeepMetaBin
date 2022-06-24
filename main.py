@@ -55,7 +55,7 @@ parser.add_argument('--lr_decay', default=0.5, type=float,
                     help='Learning rate decay for training (default: 0.5)')
 
 ## Architecture
-parser.add_argument('--num_classes', type=int, default=74,
+parser.add_argument('--num_classes', type=int, default=11,
                     help='number of classes (default: 10)')
 parser.add_argument('--gaussian_size', default=32, type=int,
                     help='gaussian size (default: 64)')
@@ -93,7 +93,7 @@ parser.add_argument('--verbose', default=1, type=int,
                     help='print extra information at every epoch.(default: 0)')
 parser.add_argument('--random_search_it', type=int, default=20,
                     help='iterations of random search (default: 20)')
-parser.add_argument('--truth', type=str, default='../DeepBin/data/CAMI1_M1/labels.csv',
+parser.add_argument('--truth', type=str, default='../DeepBin/data/sharon/labels.csv',
                     help='ground truth of your test data')
 parser.add_argument('--cutoff', type=int, default=1000,
                     help='abandon those contig with length smaller than a cutoff value')
@@ -122,14 +122,14 @@ if args.cuda:
 # train_dataset = []
 # with open("data/hlj/training_set.pkl", "rb") as f:
 #   train_dataset = pickle.load(f)
-# train_dataset = torch.load("data/CAMI1_M1/training_set.pkl", map_location='cpu')
-# test_dataset = torch.load("data/CAMI1_M1/test_set.pkl", map_location='cpu')
+# train_dataset = torch.load("data/sharon/training_set.pkl", map_location='cpu')
+# test_dataset = torch.load("data/sharon/test_set.pkl", map_location='cpu')
 if args.cuda == 0:
-  train_dataset = torch.load("data/CAMI1_M1/training_set.pkl", map_location ='cpu')
-  test_dataset = torch.load("data/CAMI1_M1/test_set.pkl", map_location ='cpu')
+  train_dataset = torch.load("data/sharon/training_set.pkl", map_location ='cpu')
+  test_dataset = torch.load("data/sharon/test_set.pkl", map_location ='cpu')
 else:
-  train_dataset = torch.load("data/CAMI1_M1/test_set.pkl", map_location='cuda')
-  test_dataset = torch.load("data/CAMI1_M1/test_set.pkl", map_location='cuda')
+  train_dataset = torch.load("data/sharon/test_set.pkl", map_location='cuda')
+  test_dataset = torch.load("data/sharon/test_set.pkl", map_location='cuda')
 # test_dataset = []
 # with open("data/hlj/test_set.pkl", "rb") as f:
 #   test_dataset = pickle.load(f)

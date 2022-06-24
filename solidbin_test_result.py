@@ -84,17 +84,18 @@ def calculate_accuracy(predicts, ground_truth):
     return precision, recall, f1_score, ari
 
 predicts = []
-with open('data/CAMI1_L/vamb/clusters.tsv', 'r') as f:
+with open('/home/comp/zmzhang/raomingxing/12mock/metacoag/output_folder/contig_to_bin.tsv', 'r') as f:
     for l in f.readlines():
-        items = l.split()
-        if len(items) == 3:
-            continue
-        temp = items[1].split('_')
-        if int(temp[3]) >= 1000:
-            predicts.append((int(items[0]), items[1]))
+        if l.startswith('NODE'):
+            items = l.split()
+            if len(items) == 3:
+                continue
+            temp = items[0].split('_')
+            if int(temp[3]) >= 1000:
+                predicts.append((int(items[1]), items[0]))
 
 ground_truth = []
-with open('data/CAMI1_L/labels.csv', 'r') as f:
+with open('../GMVAE_Graph_fusion/data/12mock/labels.csv', 'r') as f:
     for l in f.readlines():
         items = l.split(',')
         if len(items) == 3:

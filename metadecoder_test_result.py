@@ -30,8 +30,6 @@ def calculate_precision(predicts, ground_truth):
             total_predicts += sum(label_dict.values())
     return correct_predicts / total_predicts
 
-      
-
 def calculate_recall(predicts, ground_truth):
     predicts_dict = {}
     for clusterNo, contig in predicts:
@@ -83,27 +81,37 @@ def calculate_accuracy(predicts, ground_truth):
     ari = calculate_ari(predicts, ground_truth)
     return precision, recall, f1_score, ari
 
-predicts = []
-with open('data/CAMI1_L/vamb/clusters.tsv', 'r') as f:
-    for l in f.readlines():
-        items = l.split()
-        if len(items) == 3:
-            continue
-        temp = items[1].split('_')
-        if int(temp[3]) >= 1000:
-            predicts.append((int(items[0]), items[1]))
-
-ground_truth = []
-with open('data/CAMI1_L/labels.csv', 'r') as f:
+gt_valid = set()
+with open('data/sharon/labels.csv', 'r') as f:
     for l in f.readlines():
         items = l.split(',')
         if len(items) == 3:
             continue
         temp = items[0].split('_')
         if int(temp[3]) >= 1000:
-            ground_truth.append((items[0], items[1]))
+            node_num = temp[0] + '_' + temp[1]
+            gt_valid.add(node_num)
 
-print(len(predicts))
+predicts = []
+with open('/home/comp/zmzhang/raomingxing/medium/metadecoder_002/initial_contig_bins.csv', 'r') as f:
+    for l in f.readlines():
+        items = l.split(',')
+        if len(items) == 3:
+            continue
+        if items[0] in gt_valid:
+            predicts.append((int(items[1]), items[0]))
+
+ground_truth = []
+with open('data/CAMI1_M2/labels.csv', 'r') as f:
+    for l in f.readlines():
+        items = l.split(',')
+        if len(items) == 3:
+            continue
+        temp = items[0].split('_')
+        if int(temp[3]) >= 1000:
+            node_num = temp[0] + '_' + temp[1]
+            ground_truth.append((node_num, items[1]))
+# print(predicts[:5])
 # print(ground_truth[:5])
 precision, recall, f1_score, ari = calculate_accuracy(predicts, ground_truth)
 print("Valid - Precision: {:.5f}; Recall: {:.5f}; F1_score: {:.5f}; ARI: {:.5f}".format(precision, recall, f1_score, ari))
