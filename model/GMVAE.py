@@ -62,6 +62,10 @@ class GMVAE:
     self.cutoff = args.cutoff
     self.ground_truth = []
 
+    self.best_metric_results = (0.0, 0.0, 0.0, 0.0)
+    self.best_result = None
+    # self.best_model = None
+
     with open(args.truth, 'r') as f:
       for l in f.readlines():
           items = l.split(',')
@@ -319,20 +323,23 @@ class GMVAE:
         output: (dict) contains the history of train/val loss
     """
     optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate)
-    # train_history_acc, val_history_acc = [], []
-    # train_history_nmi, val_history_nmi = [], []
 
-    val_results = []
+
+    # val_results = []
     for epoch in range(1, self.num_epochs + 1):
       train_loss, train_rec, train_gauss, train_cat = self.train_epoch(optimizer, train_loader)
       val_loss, val_rec, val_gauss, val_cat, predicts = self.test(test_loader, True)
       precision, recall, f1_score, ari = self.calculate_accuracy(predicts, self.ground_truth)
-      precision, recall, f1_score, ari = self.fit_gmm(test_loader)
+      contignames, predicts, metric_results = self.fit_gmm(test_loader)
+      precision, recall, f1_score, ari = metric_results
       # if epoch > 50:
         # precision, recall, f1_score, ari = self.fit_gmm(test_loader)
 
       # precision1, recall1, f1_score1, ari1 = self.fit_gmm(test_loader)     
-      val_results.append((epoch, f1_score, ari))
+      # val_results.append((epoch, f1_score, ari))
+      if f1_score > self.best_metric_results[2]:
+        self.best_metric_results = (precision, recall, f1_score, ari)
+        self.best_result = (contignames, predicts)
 
       self.logger.info("(Epoch %d / %d)" % (epoch, self.num_epochs))
 
@@ -350,8 +357,8 @@ class GMVAE:
         self.gumbel_temp = np.maximum(self.init_temp * np.exp(-self.decay_temp_rate * epoch), self.min_temp)
         if self.verbose == 1:
           print("Gumbel Temperature: %.3lf" % self.gumbel_temp)
-    # for epoch, f1, ari in val_results:
-    #   print("(Epoch {}) F1_score: {:.5f}; ARI: {:.5f}".format(epoch, f1, ari), end='')
+    return self.best_result, self.best_metric_results
+
 
   def calculate_precision(self, predicts, ground_truth):
     predicts_dict = {}
@@ -568,12 +575,13 @@ class GMVAE:
   def fit_gmm(self, data_loader):
     latents, contignames = self.generate_latent(data_loader)
   
-    gmm = GaussianMixture(n_components=self.num_classes, covariance_type='full')
+    gmm = GaussianMixture(n_components=self.num_classes, covariance_type='full', random_state = 0)
     predicts = gmm.fit_predict(latents)
     results = []
     for cluster, contig in zip(predicts, contignames):
       results.append((cluster, contig))
-    return self.calculate_accuracy(results, self.ground_truth)
+    return contignames, predicts, self.calculate_accuracy(results, self.ground_truth)
+    
 
   def k_means(self, data_loader):
     latents, contignames = self.generate_latent(data_loader)

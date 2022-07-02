@@ -23,11 +23,13 @@ import _pickle as pickle
 #########################################################
 ## Input Parameters
 #########################################################
+
 parser = argparse.ArgumentParser(description='PyTorch Implementation of DeepMetaBin Clustering')
 
 ## Dataset
 parser.add_argument('--train_set', type=str, default='data/sharon/training_set.pkl', help='training set (.pkl)')
 parser.add_argument('--test_set', type=str, default='data/sharon/test_set.pkl', help='test set (.pkl) (they are the same without the assembly graph)')
+parser.add_argument('--output_dir', type=str, default='data/sharon/', help='test set (.pkl) (they are the same without the assembly graph)')
 parser.add_argument('--seed', type=int, default=0, help='random seed (default: 0)')
 
 ## GPU
@@ -126,12 +128,17 @@ val_loader = test_loader
 gmvae = GMVAE(args)
 
 ## Training Phase
-history_loss = gmvae.train(train_loader, val_loader, test_loader)
-
+best_result, best_metric_results = gmvae.train(train_loader, val_loader, test_loader)
+precision, recall, f1_score, ari = best_metric_results
+contignames, predicts = best_result
 
 # Testing Phase
-precision, recall, f1_score, ari = gmvae.test(test_loader, output_result = True)
+# precision, recall, f1_score, ari = gmvae.test(test_loader, output_result = True)
 
 print("Valid - Precision: {:.5f}; Recall: {:.5f}; F1_score: {:.5f}; ARI: {:.5f}".format(precision, recall, f1_score, ari))
+
+with open(os.path.join(args.output_dir, 'result.csv'), 'w') as f:
+    for contig, cluster in zip(contignames, predicts):
+      f.write(f'{contig},{cluster}\n')
 
 
